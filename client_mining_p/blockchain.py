@@ -140,17 +140,22 @@ def mine():
     # }
 
     data = request.get_json()
-    if not data.proof or not data.id:
+    if not data.get('proof') or not data.get('id'):
         response = {
             "message": "Invalid request"
         }
+
+        return jsonify(response), 400
     else:
-        proof = data.proof
+        proof = data.get('proof')
         # id = data.id
-        is_valid = blockchain.valid_proof(blockchain.last_block, proof)
+        block_string = json.dumps(blockchain.last_block, sort_keys=True)
+        is_valid = blockchain.valid_proof(block_string, proof)
         if is_valid:
+            previous_hash = blockchain.hash(blockchain.last_block)
+            blockchain.new_block(proof, previous_hash)
             response = {
-                "message": "Mining successful"
+                "message": "New Block Forged"
             }
         else:
             response = {
